@@ -3,3 +3,27 @@
 evals/
 *-workspace/
 instructions
+
+# Environment variables — never commit these
+.env
+
+# Plugin credentials and local settings — never commit these
+.claude/shopifyql.local.md
+.claude/*.local.md
+
+# Query result output files
+shopifyql-results/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/

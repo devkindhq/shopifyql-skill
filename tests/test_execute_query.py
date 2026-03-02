@@ -1,8 +1,10 @@
 """Tests for execute_query.py — run with: python3.11 -m pytest tests/ -v"""
 import json
 import subprocess
-import sys
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
+import pytest
 
 SCRIPT = "scripts/execute_query.py"
 
@@ -17,36 +19,39 @@ def run_script(*args):
 
 
 def test_missing_required_args_returns_error():
-    """Script exits with error JSON when required args are missing."""
-    output, _ = run_script("--store-url", "test.myshopify.com")
+    """Script exits with error JSON when --query is missing."""
+    output, _ = run_script("--store-url", "test.myshopify.com", "--token", "shpat_x")
     assert "error" in output
 
 
+def test_missing_credentials_returns_error():
+    """Script exits with error JSON when credentials are explicitly empty."""
+    output, code = run_script("--store-url", "", "--token", "",
+                              "--query", "FROM sales SHOW net_sales")
+    assert "error" in output
+    assert code == 1
+
+
 def test_output_structure_has_required_keys():
-    """Successful query returns rows, columns, row_count."""
-    with patch("shopifyql.ShopifyQLClient") as mock_client:
-        mock_instance = MagicMock()
-        mock_client.return_value = mock_instance
-        mock_instance.query.return_value = {
-            "data": {
-                "queryRoot": {
-                    "shopifyqlQuery": {
-                        "tableData": {
-                            "columns": [{"name": "product_title"}, {"name": "revenue"}],
-                            "rowData": [["Widget A", "1000.00"], ["Widget B", "500.00"]]
-                        }
-                    }
-                }
-            }
-        }
-        # Import and call directly rather than subprocess for mock to work
-        import importlib.util, sys as _sys
-        spec = importlib.util.spec_from_file_location("execute_query", SCRIPT)
-        mod = importlib.util.module_from_spec(spec)
-        # patch sys.argv
-        _sys.argv = ["execute_query.py", "--store-url", "test.myshopify.com",
-                     "--token", "shpat_test", "--query", "FROM sales SHOW sum(net_sales)"]
-        spec.loader.exec_module(mod)
+    """Successful query returns columns, rows, row_count."""
+    mock_df = pd.DataFrame({
+        "product_title": ["Widget A", "Widget B"],
+        "net_sales": ["1000.00", "500.00"],
+    })
+    with patch("shopifyql.ShopifyQLClient") as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client_cls.return_value = mock_client
+        mock_client.query_pandas.return_value = mock_df
+
+        from scripts.execute_query import execute_query
+        result = execute_query("test.myshopify.com", "shpat_test",
+                               "FROM sales SHOW net_sales")
+
+    assert "columns" in result
+    assert "rows" in result
+    assert "row_count" in result
+    assert result["row_count"] == 2
+    assert result["columns"] == ["product_title", "net_sales"]
 
 
 def test_null_totals_rows_are_filtered():
@@ -54,7 +59,7 @@ def test_null_totals_rows_are_filtered():
     from scripts.execute_query import filter_null_group_rows
     rows = [
         ["Widget A", "1000.00"],
-        [None, "1500.00"],   # <-- WITH TOTALS null row
+        [None, "1500.00"],   # WITH TOTALS null row
         ["Widget B", "500.00"],
     ]
     result = filter_null_group_rows(rows)
@@ -63,7 +68,7 @@ def test_null_totals_rows_are_filtered():
 
 
 def test_duration_columns_are_flagged():
-    """Columns matching duration type patterns are noted in output."""
+    """Columns ending in _ms are flagged; others are not."""
     from scripts.execute_query import flag_duration_columns
     columns = ["product_title", "lcp_p75_ms", "inp_p75_ms", "cls_p75"]
     flagged = flag_duration_columns(columns)
@@ -73,7 +78,7 @@ def test_duration_columns_are_flagged():
 
 
 def test_csv_output_format():
-    """--output csv returns valid CSV string instead of JSON rows."""
+    """format_output with fmt='csv' returns valid CSV with headers."""
     from scripts.execute_query import format_output
     data = {
         "columns": ["product_title", "revenue"],
@@ -83,3 +88,20 @@ def test_csv_output_format():
     csv_out = format_output(data, fmt="csv")
     assert "product_title,revenue" in csv_out
     assert "Widget A" in csv_out
+
+
+def test_normalize_shop_strips_domain():
+    """_normalize_shop accepts full URL or bare subdomain."""
+    from scripts.execute_query import _normalize_shop
+    assert _normalize_shop("my-store.myshopify.com") == "my-store"
+    assert _normalize_shop("https://my-store.myshopify.com/") == "my-store"
+    assert _normalize_shop("my-store") == "my-store"
+
+
+def test_clean_query_strips_visualize():
+    """_clean_query removes VISUALIZE lines that the API rejects."""
+    from scripts.execute_query import _clean_query
+    q = "FROM sales\nSHOW net_sales\nVISUALIZE bar\nSINCE 2026-01-01"
+    cleaned = _clean_query(q)
+    assert "VISUALIZE" not in cleaned
+    assert "FROM sales" in cleaned
