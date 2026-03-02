@@ -1,0 +1,17 @@
+---
+store_url: ""
+access_token: ""
+output_preference: smart
+output_dir: ./shopifyql-results/
+---
+
+# ShopifyQL Plugin Settings
+#
+# store_url:        Your store domain, e.g. my-store.myshopify.com
+# access_token:     Admin API token from your Custom App (starts with shpat_)
+# output_preference: smart | always-chat | always-save
+#                   smart = ≤20 rows in chat, >20 rows saved to file
+# output_dir:       Where to save result files (relative to project root)
+#
+# Run /shopifyql-setup to fill this in interactively.
+# Copy this file to .claude/shopifyql.local.md — do NOT commit that file.
