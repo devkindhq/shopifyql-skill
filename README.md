@@ -1,11 +1,12 @@
 # ShopifyQL Skill for Claude Code
 
-A Claude Code skill for writing, debugging, and explaining ShopifyQL analytics queries and Shopify Segment Query Language customer filters.
+A Claude Code skill for writing, executing, debugging, and explaining ShopifyQL analytics queries and Shopify Segment Query Language customer filters.
 
 ## What it does
 
 Triggers automatically when you ask Claude to:
 - Write a ShopifyQL report query (`FROM sales SHOW ...`)
+- **Run or execute a query against your live store**
 - Build a customer segment filter
 - Debug a ShopifyQL syntax error
 - Translate a business question into a Shopify analytics query
@@ -17,6 +18,56 @@ Triggers automatically when you ask Claude to:
 - **Segment Query Language** — all attribute types, operators, date formats, and functions (`products_purchased`, `orders_placed`, `shopify_email`, `anniversary`, `customer_within_distance`, `storefront_event`)
 - **Common ecommerce patterns** — top products, channel attribution, re-engagement, high-value customers, wholesale/B2B segments
 - **Debugging checklist** — ordered list of the most common ShopifyQL errors
+
+## Execution
+
+This plugin can execute ShopifyQL queries directly against your Shopify store.
+
+### Requirements
+
+- Python 3.11: `brew install python@3.11`
+- Dependencies: `pip3.11 install 'shopifyql[all]' pandas python-dotenv certifi`
+- A Shopify Custom App with scopes: `read_analytics`, `read_reports`, `read_customers`, `read_orders`
+
+### Setup
+
+Run once per project:
+
+```
+/shopifyql-setup
+```
+
+This saves your credentials to `.env` (gitignored). Or create `.env` manually:
+
+```
+SHOPIFY_STORE_URL=my-store.myshopify.com
+SHOPIFY_ACCESS_TOKEN=shpat_xxxx
+```
+
+### Usage
+
+1. Ask Claude to write a ShopifyQL query
+2. Say **"run it"** or **"execute"** — the `shopifyql-executor` agent takes over
+3. Results ≤ 20 rows appear as a table in chat; larger results are saved as CSV to `./shopifyql-results/`
+
+### Running the script directly
+
+```bash
+python3.11 scripts/execute_query.py \
+  --query "FROM sales SHOW net_sales SINCE 2026-01-01 UNTIL 2026-01-31"
+
+# For _ms duration columns (LCP, INP):
+python3.11 scripts/execute_query.py --raw \
+  --query "FROM web_performance SHOW lcp_p75_ms GROUP BY day TIMESERIES day SINCE 2026-01-01 UNTIL 2026-01-31"
+
+# CSV output:
+python3.11 scripts/execute_query.py --output csv \
+  --query "FROM sales SHOW net_sales GROUP BY product_title SINCE 2026-01-01 UNTIL 2026-01-31 ORDER BY net_sales DESC LIMIT 20"
+```
+
+### Known SDK quirk
+
+Columns ending in `_ms` (`lcp_p75_ms`, `inp_p75_ms`) trigger a type-cast bug in `query_pandas()`. Use `--raw` for these — the executor agent handles this automatically.
 
 ## Installation
 
