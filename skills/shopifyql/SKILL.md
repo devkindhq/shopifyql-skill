@@ -376,3 +376,29 @@ When a query errors or returns unexpected results:
 ---
 
 See `references/tables.md` for full lists of available dimensions and metrics per table.
+
+---
+
+## 6. Execution
+
+When the user wants to **run** a query (trigger phrases: "run it", "execute", "run the query",
+"what are the results", "show me the data", "get the data", "fetch results"):
+
+1. Ensure a valid ShopifyQL query has been written (write one if needed)
+2. **Hand off to the `shopifyql-executor` agent** — do NOT attempt to run the query yourself
+3. The executor agent handles credentials, SDK invocation, and output formatting
+
+If no credentials are configured yet, direct them to run `/shopifyql-setup` first.
+
+### Notes for execution
+
+- Queries with `_ms` columns (`lcp_p75_ms`, `inp_p75_ms`) need `--raw` flag — the executor handles this automatically
+- Strip any `VISUALIZE` lines before passing to the executor — the API rejects them
+- `WITH TOTALS` adds a null-first-column row that the executor filters out automatically
+
+### After execution
+
+Stay in the conversation to help with:
+- **Explain the results** — interpret the data in plain language
+- **Refine the query** — adjust filters, date ranges, groupings based on what was returned
+- **Compare** — help the user understand trends or outliers in the results
