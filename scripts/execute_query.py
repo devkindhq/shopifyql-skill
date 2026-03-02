@@ -46,6 +46,21 @@ def filter_null_group_rows(rows: list[list]) -> list[list]:
     return [row for row in rows if row and row[0] is not None]
 
 
+def _json_safe(val):
+    """Convert pandas/numpy types that json.dumps can't handle."""
+    import pandas as pd
+    import numpy as np
+    if isinstance(val, (pd.Timestamp,)):
+        return val.isoformat()
+    if isinstance(val, (np.integer,)):
+        return int(val)
+    if isinstance(val, (np.floating,)):
+        return float(val)
+    if isinstance(val, float) and (val != val):  # NaN
+        return None
+    return val
+
+
 def format_output(data: dict, fmt: str = "json") -> str:
     """Format result data as JSON or CSV string."""
     if fmt == "csv":
@@ -54,7 +69,8 @@ def format_output(data: dict, fmt: str = "json") -> str:
         writer.writerow(data["columns"])
         writer.writerows(data["rows"])
         return buf.getvalue()
-    return json.dumps(data, indent=2)
+    safe = {**data, "rows": [[_json_safe(v) for v in row] for row in data["rows"]]}
+    return json.dumps(safe, indent=2)
 
 
 def _normalize_shop(store_url: str) -> str:
@@ -89,10 +105,24 @@ def execute_query(store_url: str, token: str, query: str, raw: bool = False) -> 
     client = ShopifyQLClient(shop=shop, access_token=token)
     q = _clean_query(query)
 
+    _GQL = """
+    query ($q: String!) {
+        shopifyqlQuery(query: $q) {
+            tableData { columns { name dataType } rows }
+            parseErrors
+        }
+    }
+    """
+
     def _run():
         if raw:
-            result = client.query(q)
-            return pd.DataFrame([dict(row) for row in result])
+            # Bypass ShopifyQLRecordsResult type-casting (breaks on _ms columns)
+            # by calling graphql_query directly and reading the JSON scalar rows
+            resp = client.graphql_query(_GQL, variables={"q": q})
+            td = resp["data"]["shopifyqlQuery"]["tableData"]
+            cols = [c["name"] for c in td["columns"]]
+            rows_raw = td["rows"]  # list of dicts
+            return pd.DataFrame([[r[c] for c in cols] for r in rows_raw], columns=cols)
         return client.query_pandas(q)
 
     try:
