@@ -1,0 +1,20 @@
+{
+  "name": "shopifyql-marketplace",
+  "description": "ShopifyQL skill for Claude Code",
+  "owner": {
+    "name": "Kazim Ali",
+    "email": "ali@devkind.com.au"
+  },
+  "plugins": [
+    {
+      "name": "shopifyql",
+      "description": "Write, debug, and explain ShopifyQL analytics queries and Shopify Segment Query Language customer filters",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "Kazim Ali",
+        "email": "ali@devkind.com.au"
+      }
+    }
+  ]
+}
