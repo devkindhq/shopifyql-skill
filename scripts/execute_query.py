@@ -115,15 +115,22 @@ def execute_query(store_url: str, token: str, query: str, raw: bool = False) -> 
     """
 
     def _run():
+        # Always go through graphql_query so we can inspect parseErrors
+        resp = client.graphql_query(_GQL, variables={"q": q})
+        node = resp["data"]["shopifyqlQuery"]
+        parse_errors = node.get("parseErrors") or []
+        if parse_errors:
+            raise ValueError("ShopifyQL parse errors: " + "; ".join(parse_errors))
+        td = node["tableData"]
+        if td is None:
+            raise ValueError("ShopifyQL returned no table data (tableData is null)")
+        cols = [c["name"] for c in td["columns"]]
+        rows_raw = td["rows"]  # list of dicts
         if raw:
-            # Bypass ShopifyQLRecordsResult type-casting (breaks on _ms columns)
-            # by calling graphql_query directly and reading the JSON scalar rows
-            resp = client.graphql_query(_GQL, variables={"q": q})
-            td = resp["data"]["shopifyqlQuery"]["tableData"]
-            cols = [c["name"] for c in td["columns"]]
-            rows_raw = td["rows"]  # list of dicts
+            # raw=True: keep values as-is (avoids _ms column type-casting issues)
             return pd.DataFrame([[r[c] for c in cols] for r in rows_raw], columns=cols)
-        return client.query_pandas(q)
+        # Default: let pandas infer types for nicer output
+        return pd.DataFrame([[r[c] for c in cols] for r in rows_raw], columns=cols)
 
     try:
         df = _run()
@@ -161,8 +168,12 @@ def _error_hint(err: str) -> str:
         return "Token invalid or expired. Check SHOPIFY_ACCESS_TOKEN in .env"
     if "404" in err:
         return "Store URL not found. Check SHOPIFY_STORE_URL in .env"
-    if "scope" in err.lower() or "permission" in err.lower() or "no valid table data" in err.lower():
+    if "parse errors" in err.lower() or "feature not supported" in err.lower():
+        return "The query contains unsupported syntax for this store's plan. Check the error message above for details."
+    if "scope" in err.lower() or "permission" in err.lower():
         return "Missing API scope. Enable read_analytics, read_reports, read_customers, read_orders on your Custom App."
+    if "no table data" in err.lower() or "no valid table data" in err.lower():
+        return "Query returned no data. The store may not have data in the requested date range, or this analytics feature may not be available on the current plan."
     return "Check SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN in .env are correct."
 
 
