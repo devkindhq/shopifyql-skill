@@ -4,6 +4,9 @@ evals/
 *-workspace/
 instructions
 
+# Internal planning docs — never publish these
+docs/plans/
+
 # Environment variables — never commit these
 .env
 
