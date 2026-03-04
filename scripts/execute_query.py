@@ -8,9 +8,16 @@ Usage:
         [--raw]            # use raw client.query() for _ms duration columns
         [--output json|csv]
 
-Credentials loaded from .env (project root):
-    SHOPIFY_STORE_URL=my-store.myshopify.com
-    SHOPIFY_ACCESS_TOKEN=shpat_xxxx
+Credentials (checked in this order — first match wins):
+    1. OS environment variables (recommended for plugin users):
+           export SHOPIFY_STORE_URL=my-store.myshopify.com
+           export SHOPIFY_ACCESS_TOKEN=shpat_xxxx
+       Add to ~/.zshrc or ~/.bashrc to persist across sessions.
+
+    2. Project .env file (local dev fallback):
+           SHOPIFY_STORE_URL=my-store.myshopify.com
+           SHOPIFY_ACCESS_TOKEN=shpat_xxxx
+       Keep this file gitignored. Never commit it.
 
 Output (stdout): JSON object with keys: columns, rows, row_count, [warnings]
 On error (stdout): JSON object with keys: error, hint
@@ -165,16 +172,16 @@ def execute_query(store_url: str, token: str, query: str, raw: bool = False) -> 
 
 def _error_hint(err: str) -> str:
     if "401" in err or "Unauthorized" in err:
-        return "Token invalid or expired. Check SHOPIFY_ACCESS_TOKEN in .env"
+        return "Token invalid or expired. Check SHOPIFY_ACCESS_TOKEN (env var or .env file). Run /shopifyql-setup to update."
     if "404" in err:
-        return "Store URL not found. Check SHOPIFY_STORE_URL in .env"
+        return "Store URL not found. Check SHOPIFY_STORE_URL (env var or .env file)."
     if "parse errors" in err.lower() or "feature not supported" in err.lower():
         return "The query contains unsupported syntax for this store's plan. Check the error message above for details."
     if "scope" in err.lower() or "permission" in err.lower():
         return "Missing API scope. Enable read_analytics, read_reports, read_customers, read_orders on your Custom App."
     if "no table data" in err.lower() or "no valid table data" in err.lower():
         return "Query returned no data. The store may not have data in the requested date range, or this analytics feature may not be available on the current plan."
-    return "Check SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN in .env are correct."
+    return "Check SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN are set correctly (env var or .env file)."
 
 
 def main():
@@ -196,7 +203,11 @@ def main():
     if not args.store_url or not args.token:
         print(json.dumps({
             "error": "Missing credentials",
-            "hint": "Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN in .env"
+            "hint": (
+                "Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN as environment variables "
+                "(export in ~/.zshrc), or create a .env file in the project root. "
+                "Run /shopifyql-setup for guided setup."
+            )
         }))
         sys.exit(1)
 

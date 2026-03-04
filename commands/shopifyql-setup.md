@@ -1,9 +1,9 @@
 ---
 name: shopifyql-setup
-description: Interactive setup wizard for ShopifyQL plugin credentials and preferences. Run this once per project to configure your Shopify store connection.
+description: Interactive setup wizard for ShopifyQL plugin credentials and preferences. Run this once to configure your Shopify store connection — credentials work across all projects.
 ---
 
-You are running the ShopifyQL plugin setup wizard. Your job is to explain the credential options to the user, collect their preference, then either write `.env` or show them the shell export commands.
+You are running the ShopifyQL plugin setup wizard. Your job is to check Python, collect credentials, and configure them so the plugin works across any project.
 
 **Security note:** You must NEVER read `.env` or display a full access token back to the user at any point during this wizard.
 
