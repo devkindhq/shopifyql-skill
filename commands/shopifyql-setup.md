@@ -3,16 +3,37 @@ name: shopifyql-setup
 description: Interactive setup wizard for ShopifyQL plugin credentials and preferences. Run this once per project to configure your Shopify store connection.
 ---
 
-You are running the ShopifyQL plugin setup wizard. Your job is to collect credentials and preferences from the user, then write them to `.env` in the project root.
+You are running the ShopifyQL plugin setup wizard. Your job is to explain the credential options to the user, collect their preference, then either write `.env` or show them the shell export commands.
 
-## Step 1 — Check for existing config
+**Security note:** You must NEVER read `.env` or display a full access token back to the user at any point during this wizard.
 
-Try to read `.env` in the project root.
+## Step 1 — Explain credential options
 
-- If the file exists and has a non-empty `SHOPIFY_STORE_URL`, tell the user their current settings (mask the token: show only the first 8 chars + `...`) and ask: "Would you like to update specific fields, or overwrite everything?"
-- If the file does not exist, proceed to collect all fields.
+Before collecting anything, explain the two ways credentials can be provided, and ask which they prefer:
 
-## Step 2 — Collect credentials
+> **Option A — `.env` file (easiest):**
+> Credentials are written to a `.env` file in the project root. The script reads this file automatically. The file should be gitignored and never committed.
+> ⚠️ Note: Claude Code itself is blocked from reading `.env`, so the token stays private.
+>
+> **Option B — OS environment variables (more secure):**
+> You export credentials in your shell before launching Claude Code. The token is never written to disk in this project at all — it only lives in your shell session.
+>
+> Which would you prefer?
+
+Use `AskUserQuestion` with options "`.env` file" and "OS environment variables".
+
+## Step 2 — Check for existing config (Option A only)
+
+If the user chose Option A, use `Bash` to check whether `.env` exists and has a non-empty `SHOPIFY_STORE_URL`:
+
+```bash
+grep -s 'SHOPIFY_STORE_URL' .env | head -1
+```
+
+- If a value is found, tell the user: "A store URL is already configured (`<url>`). Would you like to update it, or keep it?" — mask any token, never show it.
+- If nothing found, proceed to collect all fields.
+
+## Step 3 — Collect credentials
 
 Use `AskUserQuestion` to ask ONE question at a time:
 
@@ -26,9 +47,11 @@ Ask: "Paste your Admin API access token (from your Custom App in Shopify Partner
 - Warn if it doesn't start with `shpat_`
 - Never display the full token back to the user after collection
 
-## Step 3 — Write the .env file
+## Step 4 — Save credentials
 
-Write `.env` in the project root with this exact format:
+**If Option A (`.env` file):**
+
+Write `.env` in the project root using the `Write` tool with this exact format:
 
 ```
 SHOPIFY_STORE_URL=<value>
@@ -37,15 +60,39 @@ SHOPIFY_ACCESS_TOKEN=<value>
 
 Preserve any other existing lines in `.env` that aren't being updated.
 
-## Step 4 — Confirm
+Then confirm: "Credentials saved to `.env`. This file is gitignored — do not commit it."
+
+---
+
+**If Option B (OS environment variables):**
+
+Do NOT write any file. Instead, show the user these exact commands to run in their terminal before launching Claude Code:
+
+```bash
+export SHOPIFY_STORE_URL=<store_url>
+export SHOPIFY_ACCESS_TOKEN=<token>
+```
+
+Then explain:
+
+> Add these to your shell profile (`~/.zshrc` or `~/.bashrc`) to make them permanent:
+>
+> ```bash
+> echo 'export SHOPIFY_STORE_URL=<store_url>' >> ~/.zshrc
+> echo 'export SHOPIFY_ACCESS_TOKEN=<token>' >> ~/.zshrc
+> source ~/.zshrc
+> ```
+>
+> With this approach, your token is never written to disk inside this project. The script picks up environment variables automatically.
+
+## Step 5 — Confirm and next steps
 
 Tell the user:
-- Setup complete. Store: `<store_url>`. Token saved (masked).
-- "Your credentials are saved to `.env` (gitignored). Do not commit this file."
+- "Setup complete. Store: `<store_url>`. Token saved (masked)."
 - "To run a query, just ask: 'run this ShopifyQL query: FROM sales SHOW net_sales SINCE ...'"
 - "Or use the executor directly: `python3.11 scripts/execute_query.py --query \"...\"`"
 
 ## Error handling
 
-- If Write fails due to permissions, tell the user to create `.env` manually using the template at `scripts/shopifyql.local.md.template`.
+- If Write fails due to permissions (Option A), tell the user to create `.env` manually with the two lines shown in Step 4.
 - If the token doesn't start with `shpat_`, warn but still save — Custom App tokens may vary.
