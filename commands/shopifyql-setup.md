@@ -66,94 +66,83 @@ Do not proceed to credential collection until Python 3.11 is confirmed working.
 
 ---
 
-## Step 1 — Explain credential options
+## Step 1 — Explain how credentials work for this plugin
 
-Before collecting anything, explain the two ways credentials can be provided, and ask which they prefer:
+Before collecting anything, explain:
 
-> **Option A — `.env` file (easiest):**
-> Credentials are written to a `.env` file in the project root. The script reads this file automatically. The file should be gitignored and never committed.
-> ⚠️ Note: Claude Code itself is blocked from reading `.env`, so the token stays private.
+> This is a Claude Code plugin — credentials are set **once** as OS environment variables and work across every project automatically. You won't need to run this setup again per project.
 >
-> **Option B — OS environment variables (more secure):**
-> You export credentials in your shell before launching Claude Code. The token is never written to disk in this project at all — it only lives in your shell session.
+> The plugin checks credentials in this order:
+> 1. **OS environment variables** (recommended — set once in `~/.zshrc`, works everywhere)
+> 2. **`.env` file in the current project** (local dev fallback only)
 >
-> Which would you prefer?
+> Which would you like to use?
 
-Use `AskUserQuestion` with options "`.env` file" and "OS environment variables".
+Use `AskUserQuestion` with options:
+- "OS environment variables (recommended — works across all projects)"
+- "Project `.env` file (this project only)"
 
-## Step 2 — Check for existing config (Option A only)
-
-If the user chose Option A, use `Bash` to check whether `.env` exists and has a non-empty `SHOPIFY_STORE_URL`:
-
-```bash
-grep -s 'SHOPIFY_STORE_URL' .env | head -1
-```
-
-- If a value is found, tell the user: "A store URL is already configured (`<url>`). Would you like to update it, or keep it?" — mask any token, never show it.
-- If nothing found, proceed to collect all fields.
-
-## Step 3 — Collect credentials
+## Step 2 — Collect credentials
 
 Use `AskUserQuestion` to ask ONE question at a time:
 
 **Question 1 — Store URL:**
 Ask: "What is your Shopify store URL?"
+
 - Accept formats: `my-store.myshopify.com`, `https://my-store.myshopify.com`, `my-store`
 - Normalise to full domain: strip `https://`, strip trailing slashes, append `.myshopify.com` if no dot present
 
 **Question 2 — Access Token:**
 Ask: "Paste your Admin API access token (from your Custom App in Shopify Partners)."
+
 - Warn if it doesn't start with `shpat_`
 - Never display the full token back to the user after collection
 
-## Step 4 — Save credentials
+## Step 3 — Save credentials
 
-**If Option A (`.env` file):**
+**If OS environment variables (recommended):**
 
-Write `.env` in the project root using the `Write` tool with this exact format:
+Do NOT write any file. Show the user the exact lines to add to their shell profile:
+
+```bash
+# Add to ~/.zshrc (macOS) or ~/.bashrc (Linux)
+export SHOPIFY_STORE_URL=<store_url>
+export SHOPIFY_ACCESS_TOKEN=<token>
+```
+
+Then show the one-liner to apply it immediately:
+
+```bash
+echo 'export SHOPIFY_STORE_URL=<store_url>' >> ~/.zshrc && \
+echo 'export SHOPIFY_ACCESS_TOKEN=<token>' >> ~/.zshrc && \
+source ~/.zshrc
+```
+
+Explain: "Done — your token never touches any project file. The plugin will pick it up automatically in every project."
+
+---
+
+**If `.env` file:**
+
+Write `.env` in the project root using the `Write` tool:
 
 ```
 SHOPIFY_STORE_URL=<value>
 SHOPIFY_ACCESS_TOKEN=<value>
 ```
 
-Preserve any other existing lines in `.env` that aren't being updated.
+Preserve any other existing lines. Then confirm: "Saved to `.env` (gitignored). Note: this only works in this project — to use across projects, re-run `/shopifyql-setup` and choose the env var option."
 
-Then confirm: "Credentials saved to `.env`. This file is gitignored — do not commit it."
-
----
-
-**If Option B (OS environment variables):**
-
-Do NOT write any file. Instead, show the user these exact commands to run in their terminal before launching Claude Code:
-
-```bash
-export SHOPIFY_STORE_URL=<store_url>
-export SHOPIFY_ACCESS_TOKEN=<token>
-```
-
-Then explain:
-
-> Add these to your shell profile (`~/.zshrc` or `~/.bashrc`) to make them permanent:
->
-> ```bash
-> echo 'export SHOPIFY_STORE_URL=<store_url>' >> ~/.zshrc
-> echo 'export SHOPIFY_ACCESS_TOKEN=<token>' >> ~/.zshrc
-> source ~/.zshrc
-> ```
->
-> With this approach, your token is never written to disk inside this project. The script picks up environment variables automatically.
-
-## Step 5 — Confirm and next steps
+## Step 4 — Confirm and next steps
 
 Tell the user:
+
 - "Setup complete. Store: `<store_url>`. Token saved (masked)."
 - "To run a query, just ask: 'run this ShopifyQL query: FROM sales SHOW net_sales SINCE ...'"
-- "Or use the executor directly: `python3.11 scripts/execute_query.py --query \"...\"`"
 
 ## Error handling
 
-- If Write fails due to permissions (Option A), tell the user to create `.env` manually with the two lines shown in Step 4.
+- If Write fails due to permissions (`.env` option), tell the user to create the file manually with the two lines shown in Step 3.
 - If the token doesn't start with `shpat_`, warn but still save — Custom App tokens may vary.
 - If `pip3.11` is not found after installing Python 3.11 via Homebrew, tell the user to run `brew link python@3.11` or use the full path: `/opt/homebrew/bin/pip3.11 install ...`
-- If the user is on Apple Silicon (M1/M2/M3) and Homebrew installs to `/opt/homebrew/` instead of `/usr/local/`, `python3.11` may not be on PATH automatically — tell them to add `export PATH="/opt/homebrew/bin:$PATH"` to their `~/.zshrc`.
+- If the user is on Apple Silicon (M1/M2/M3), Homebrew installs to `/opt/homebrew/` — tell them to add `export PATH="/opt/homebrew/bin:$PATH"` to `~/.zshrc` if `python3.11` is not found after install.
