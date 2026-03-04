@@ -8,16 +8,12 @@ Usage:
         [--raw]            # use raw client.query() for _ms duration columns
         [--output json|csv]
 
-Credentials (checked in this order — first match wins):
-    1. OS environment variables (recommended for plugin users):
-           export SHOPIFY_STORE_URL=my-store.myshopify.com
-           export SHOPIFY_ACCESS_TOKEN=shpat_xxxx
-       Add to ~/.zshrc or ~/.bashrc to persist across sessions.
+Credentials — set as OS environment variables before launching Claude:
+    SHOPIFY_STORE_URL=my-store.myshopify.com
+    SHOPIFY_ACCESS_TOKEN=shpat_xxxx
 
-    2. Project .env file (local dev fallback):
-           SHOPIFY_STORE_URL=my-store.myshopify.com
-           SHOPIFY_ACCESS_TOKEN=shpat_xxxx
-       Keep this file gitignored. Never commit it.
+    Inline:    SHOPIFY_STORE_URL=... SHOPIFY_ACCESS_TOKEN=... claude
+    Exported:  export SHOPIFY_STORE_URL=... in ~/.zshrc
 
 Output (stdout): JSON object with keys: columns, rows, row_count, [warnings]
 On error (stdout): JSON object with keys: error, hint
@@ -29,15 +25,11 @@ import json
 import os
 import sys
 import time
-from pathlib import Path
 
 import certifi
 
 os.environ.setdefault("SSL_CERT_FILE", certifi.where())
 os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
-
-from dotenv import load_dotenv
-load_dotenv(Path(__file__).parent.parent / ".env")
 
 DURATION_COLUMN_PATTERNS = ("_ms",)
 RATE_LIMIT_BACKOFF = 30  # seconds to wait after a rate-limit error
@@ -172,24 +164,24 @@ def execute_query(store_url: str, token: str, query: str, raw: bool = False) -> 
 
 def _error_hint(err: str) -> str:
     if "401" in err or "Unauthorized" in err:
-        return "Token invalid or expired. Check SHOPIFY_ACCESS_TOKEN (env var or .env file). Run /shopifyql-setup to update."
+        return "Token invalid or expired. Check SHOPIFY_ACCESS_TOKEN env var. Run /shopifyql-setup to update."
     if "404" in err:
-        return "Store URL not found. Check SHOPIFY_STORE_URL (env var or .env file)."
+        return "Store URL not found. Check SHOPIFY_STORE_URL env var."
     if "parse errors" in err.lower() or "feature not supported" in err.lower():
         return "The query contains unsupported syntax for this store's plan. Check the error message above for details."
     if "scope" in err.lower() or "permission" in err.lower():
         return "Missing API scope. Enable read_analytics, read_reports, read_customers, read_orders on your Custom App."
     if "no table data" in err.lower() or "no valid table data" in err.lower():
         return "Query returned no data. The store may not have data in the requested date range, or this analytics feature may not be available on the current plan."
-    return "Check SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN are set correctly (env var or .env file)."
+    return "Check SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN env vars are set correctly."
 
 
 def main():
     parser = argparse.ArgumentParser(description="Execute a ShopifyQL query.")
     parser.add_argument("--store-url", default=os.environ.get("SHOPIFY_STORE_URL"),
-                        help="e.g. my-store.myshopify.com (or set SHOPIFY_STORE_URL in .env)")
+                        help="e.g. my-store.myshopify.com (or set SHOPIFY_STORE_URL env var)")
     parser.add_argument("--token", default=os.environ.get("SHOPIFY_ACCESS_TOKEN"),
-                        help="Admin API access token (or set SHOPIFY_ACCESS_TOKEN in .env)")
+                        help="Admin API access token (or set SHOPIFY_ACCESS_TOKEN env var)")
     parser.add_argument("--query", required=True, help="ShopifyQL query string")
     parser.add_argument("--output", choices=["json", "csv"], default="json")
     parser.add_argument("--raw", action="store_true",
@@ -204,9 +196,9 @@ def main():
         print(json.dumps({
             "error": "Missing credentials",
             "hint": (
-                "Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN as environment variables "
-                "(export in ~/.zshrc), or create a .env file in the project root. "
-                "Run /shopifyql-setup for guided setup."
+                "Set SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN as environment variables. "
+                "Inline: SHOPIFY_STORE_URL=my-store.myshopify.com SHOPIFY_ACCESS_TOKEN=shpat_xxx claude. "
+                "Or export them in ~/.zshrc. Run /shopifyql-setup for guided setup."
             )
         }))
         sys.exit(1)

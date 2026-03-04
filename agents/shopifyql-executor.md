@@ -23,7 +23,12 @@ python3.11 ${CLAUDE_PLUGIN_ROOT}/scripts/execute_query.py \
   --output json
 ```
 
-Credentials are loaded automatically from `.env` — do not pass `--store-url` or `--token` explicitly.
+**Credentials** are read from OS environment variables — do not pass `--store-url` or `--token` explicitly (keeps the token out of conversation context).
+
+The expected variable names are `SHOPIFY_STORE_URL` and `SHOPIFY_ACCESS_TOKEN`. These can be set in any of these ways — the script uses whichever is present:
+- Inline when launching Claude: `SHOPIFY_STORE_URL=my-store.myshopify.com SHOPIFY_ACCESS_TOKEN=shpat_xxx claude`
+- Exported in the shell session: `export SHOPIFY_STORE_URL=...`
+- Persisted in `~/.zshrc` or `~/.bashrc`
 
 ## Step 3 — Handle the result
 
@@ -33,7 +38,7 @@ Parse stdout as JSON.
 - Show the error message clearly
 - Show the `hint` value
 - Common errors:
-  - "Missing credentials" → tell the user to run `/shopifyql-setup`, or set `SHOPIFY_STORE_URL` and `SHOPIFY_ACCESS_TOKEN` as OS environment variables before launching Claude Code
+  - "Missing credentials" → tell the user the required env vars are `SHOPIFY_STORE_URL` and `SHOPIFY_ACCESS_TOKEN`. They can pass them inline (`SHOPIFY_STORE_URL=... SHOPIFY_ACCESS_TOKEN=... claude`), export them in the shell, or add them to `~/.zshrc`. Run `/shopifyql-setup` for guided setup.
   - "SDK not installed" → `pip3.11 install 'shopifyql[all]' pandas python-dotenv`
   - "401 / Unauthorized" → token is invalid; run `/shopifyql-setup` to update
   - "scope" / "no valid table data" → Custom App is missing required scopes: `read_analytics`, `read_reports`, `read_customers`, `read_orders`
