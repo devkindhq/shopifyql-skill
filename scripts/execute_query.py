@@ -178,10 +178,9 @@ def _error_hint(err: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Execute a ShopifyQL query.")
-    parser.add_argument("--store-url", default=os.environ.get("SHOPIFY_STORE_URL"),
-                        help="e.g. my-store.myshopify.com (or set SHOPIFY_STORE_URL env var)")
-    parser.add_argument("--token", default=os.environ.get("SHOPIFY_ACCESS_TOKEN"),
-                        help="Admin API access token (or set SHOPIFY_ACCESS_TOKEN env var)")
+    # Credentials are intentionally NOT accepted as CLI args — they must come from OS
+    # environment variables only. This prevents any AI agent from passing secrets through
+    # command-line arguments where they would appear in conversation context.
     parser.add_argument("--query", required=True, help="ShopifyQL query string")
     parser.add_argument("--output", choices=["json", "csv"], default="json")
     parser.add_argument("--raw", action="store_true",
@@ -192,7 +191,10 @@ def main():
         print(json.dumps({"error": "Missing required arguments: --query"}))
         sys.exit(1)
 
-    if not args.store_url or not args.token:
+    store_url = os.environ.get("SHOPIFY_STORE_URL")
+    token = os.environ.get("SHOPIFY_ACCESS_TOKEN")
+
+    if not store_url or not token:
         print(json.dumps({
             "error": "Missing credentials",
             "hint": (
@@ -203,7 +205,7 @@ def main():
         }))
         sys.exit(1)
 
-    result = execute_query(args.store_url, args.token, args.query, raw=args.raw)
+    result = execute_query(store_url, token, args.query, raw=args.raw)
 
     if "error" in result:
         print(json.dumps(result))

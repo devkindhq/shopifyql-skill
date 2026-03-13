@@ -31,17 +31,25 @@ This plugin can execute ShopifyQL queries directly against your Shopify store.
 
 ### Setup
 
-Run once per project:
+Credentials must be available as **OS environment variables** before launching Claude. The script reads them directly from the environment — it does not load `.env` files.
+
+The easiest way is to export them in your shell profile (`~/.zshrc` or `~/.bashrc`):
+
+```bash
+export SHOPIFY_STORE_URL=my-store.myshopify.com
+export SHOPIFY_ACCESS_TOKEN=shpat_xxxx
+```
+
+Or pass them inline when launching Claude:
+
+```bash
+SHOPIFY_STORE_URL=my-store.myshopify.com SHOPIFY_ACCESS_TOKEN=shpat_xxxx claude
+```
+
+For guided setup, run once per project:
 
 ```
 /shopifyql-setup
-```
-
-This saves your credentials to `.env` (gitignored). Or create `.env` manually:
-
-```
-SHOPIFY_STORE_URL=my-store.myshopify.com
-SHOPIFY_ACCESS_TOKEN=shpat_xxxx
 ```
 
 ### Usage

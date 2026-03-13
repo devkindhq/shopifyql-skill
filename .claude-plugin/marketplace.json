@@ -9,7 +9,7 @@
     {
       "name": "shopifyql",
       "description": "Write, execute, and explain ShopifyQL analytics queries and Shopify Segment Query Language customer filters",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "source": "./",
       "author": {
         "name": "Kazim Ali",

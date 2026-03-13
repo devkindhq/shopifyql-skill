@@ -23,7 +23,7 @@ python3.11 ${CLAUDE_PLUGIN_ROOT}/scripts/execute_query.py \
   --output json
 ```
 
-**Credentials** are read from OS environment variables — do not pass `--store-url` or `--token` explicitly (keeps the token out of conversation context).
+**Credentials** are read exclusively from OS environment variables by the script — `--store-url` and `--token` are not accepted as CLI arguments. Never attempt to read, print, or pass credential values yourself.
 
 The expected variable names are `SHOPIFY_STORE_URL` and `SHOPIFY_ACCESS_TOKEN`. These can be set in any of these ways — the script uses whichever is present:
 - Inline when launching Claude: `SHOPIFY_STORE_URL=my-store.myshopify.com SHOPIFY_ACCESS_TOKEN=shpat_xxx claude`

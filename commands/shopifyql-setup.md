@@ -53,13 +53,13 @@ python3.11 --version 2>/dev/null || echo "NOT_FOUND"
 Then check if the required Python packages are installed:
 
 ```bash
-python3.11 -c "import shopifyql, dotenv, pandas, certifi" 2>&1 || echo "MISSING_DEPS"
+python3.11 -c "import shopifyql, pandas, certifi" 2>&1 || echo "MISSING_DEPS"
 ```
 
 **If MISSING_DEPS:** show the install command and run it with user approval:
 
 ```bash
-pip3.11 install 'shopifyql[all]' pandas python-dotenv certifi
+pip3.11 install 'shopifyql[all]' pandas certifi
 ```
 
 Do not proceed to credential collection until Python 3.11 is confirmed working.
@@ -72,15 +72,9 @@ Before collecting anything, explain:
 
 > This is a Claude Code plugin — credentials are set **once** as OS environment variables and work across every project automatically. You won't need to run this setup again per project.
 >
-> The plugin checks credentials in this order:
-> 1. **OS environment variables** (recommended — set once in `~/.zshrc`, works everywhere)
-> 2. **`.env` file in the current project** (local dev fallback only)
->
-> Which would you like to use?
+> The script reads `SHOPIFY_STORE_URL` and `SHOPIFY_ACCESS_TOKEN` directly from the OS environment. No `.env` file is loaded automatically.
 
-Use `AskUserQuestion` with options:
-- "OS environment variables (recommended — works across all projects)"
-- "Project `.env` file (this project only)"
+Proceed directly to Step 2.
 
 ## Step 2 — Collect credentials
 
@@ -100,8 +94,6 @@ Ask: "Paste your Admin API access token (from your Custom App in Shopify Partner
 
 ## Step 3 — Save credentials
 
-**If OS environment variables (recommended):**
-
 Do NOT write any file. Show the user the exact lines to add to their shell profile:
 
 ```bash
@@ -119,19 +111,6 @@ source ~/.zshrc
 ```
 
 Explain: "Done — your token never touches any project file. The plugin will pick it up automatically in every project."
-
----
-
-**If `.env` file:**
-
-Write `.env` in the project root using the `Write` tool:
-
-```
-SHOPIFY_STORE_URL=<value>
-SHOPIFY_ACCESS_TOKEN=<value>
-```
-
-Preserve any other existing lines. Then confirm: "Saved to `.env` (gitignored). Note: this only works in this project — to use across projects, re-run `/shopifyql-setup` and choose the env var option."
 
 ## Step 4 — Confirm and next steps
 
