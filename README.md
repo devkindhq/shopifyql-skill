@@ -1,16 +1,19 @@
-# ShopifyQL Skill for Claude Code
+# ShopifyQL & Segment Query Language Skill for Claude Code
 
-A Claude Code skill for writing, executing, debugging, and explaining ShopifyQL analytics queries and Shopify Segment Query Language customer filters.
+A Claude Code plugin for writing, executing, debugging, and explaining **ShopifyQL analytics queries** and **Shopify Segment Query Language** customer filters — directly against your live Shopify store, no manual SQL or dashboard switching required.
+
+Use it to automate Shopify ecommerce reporting, build AI-powered analytics workflows, and translate plain-English business questions into structured store queries.
 
 ## What it does
 
 Triggers automatically when you ask Claude to:
 - Write a ShopifyQL report query (`FROM sales SHOW ...`)
-- **Run or execute a query against your live store**
-- Build a customer segment filter
+- **Run or execute a query against your live Shopify store**
+- Build a Shopify customer segment filter
 - Debug a ShopifyQL syntax error
 - Translate a business question into a Shopify analytics query
-- Understand available tables, dimensions, or metrics
+- Understand available ShopifyQL tables, dimensions, or metrics
+- Automate ecommerce reporting with an AI agent
 
 ## Covers
 
@@ -79,14 +82,16 @@ Columns ending in `_ms` (`lcp_p75_ms`, `inp_p75_ms`) trigger a type-cast bug in 
 
 ## Installation
 
-### Claude Code
+### Claude Code Marketplace
 
-Register the marketplace and install:
+Install directly from the Claude Code plugin marketplace:
 
 ```bash
 /plugin marketplace add devkindhq/shopifyql-skill
 /plugin install shopifyql@shopifyql-skill
 ```
+
+Supports Claude Code CLI, VS Code extension, JetBrains extension, and the Claude.ai web app.
 
 ### Manual
 
@@ -98,9 +103,15 @@ This plugin was built and is maintained by **[Devkind](https://devkind.com.au)**
 
 ### Agentic reporting for Shopify
 
-Devkind builds agentic reporting pipelines that go beyond standard Shopify Analytics dashboards. Instead of switching between tabs and manually interpreting numbers, an agentic layer does the analytical heavy lifting — pulling data from Shopify, ad platforms, and Google Analytics, then surfacing what changed, why, and what to do next.
+Devkind builds agentic reporting pipelines that go beyond standard Shopify Analytics dashboards. Instead of switching between tabs and manually interpreting numbers, an AI agent does the analytical heavy lifting — pulling data from Shopify, ad platforms, and Google Analytics, then surfacing what changed, why, and what to do next.
 
-If you want automated daily reporting, cross-channel attribution, or a custom AI analytics layer for your Shopify store, Devkind can scope and build it.
+This ShopifyQL plugin is one piece of that stack. If you want:
+- Automated daily Shopify analytics reports delivered to Slack or email
+- Cross-channel attribution (Shopify + Meta + Google Ads unified)
+- A custom AI analytics agent for your ecommerce store
+- ShopifyQL dashboards and Segment Query Language automation
+
+...Devkind can scope and build it for you.
 
 ## Get in touch
 
