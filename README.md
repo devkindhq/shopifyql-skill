@@ -92,6 +92,21 @@ Register the marketplace and install:
 
 Clone this repo and point Claude Code at it, or copy `skills/shopifyql/SKILL.md` into your own plugin.
 
+## Built by Devkind
+
+This plugin was built and is maintained by **[Devkind](https://devkind.com.au)** — a Melbourne-based development and AI agency specialising in Shopify, custom web applications, and agentic AI systems.
+
+### Agentic reporting for Shopify
+
+Devkind builds agentic reporting pipelines that go beyond standard Shopify Analytics dashboards. Instead of switching between tabs and manually interpreting numbers, an agentic layer does the analytical heavy lifting — pulling data from Shopify, ad platforms, and Google Analytics, then surfacing what changed, why, and what to do next.
+
+If you want automated daily reporting, cross-channel attribution, or a custom AI analytics layer for your Shopify store, Devkind can scope and build it.
+
+## Get in touch
+
+- **Website:** [devkind.com.au](https://devkind.com.au)
+- **Email:** [ali@devkind.com.au](mailto:ali@devkind.com.au)
+
 ## License
 
 MIT
