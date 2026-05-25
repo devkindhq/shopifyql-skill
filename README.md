@@ -17,8 +17,7 @@
 ## Quick Install
 
 ```bash
-/plugin marketplace add devkindhq/shopifyql-skill
-/plugin install shopifyql@shopifyql-skill
+/plugin install devkindhq/shopifyql-skill
 ```
 
 Works with **Claude Code CLI**, **VS Code extension**, **JetBrains extension**, and **Claude.ai web app**.
@@ -73,7 +72,7 @@ Also works as a standalone skill for **Cursor**, **GitHub Copilot CLI (Codex)**,
 
 1. **Install the plugin**
    ```bash
-   /plugin marketplace add devkindhq/shopifyql-skill
+   /plugin install devkindhq/shopifyql-skill
    ```
 
 2. **Set your credentials**
