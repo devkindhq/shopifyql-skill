@@ -46,6 +46,14 @@ Works with **Claude Code CLI**, **VS Code extension**, **JetBrains extension**, 
 
 ---
 
+## Built by Devkind
+
+This plugin is built and maintained by **[Devkind](https://devkind.com.au)** — a Melbourne-based agency specialising in **[Shopify development services](https://devkind.com.au/shopify-development/)** and **[AI development services](https://devkind.com.au/ai-development/)**.
+
+We build agentic AI systems for eCommerce — automated reporting, cross-channel attribution, and custom AI agents that pull insights from Shopify, Meta, Google Ads, and GA4. [Get in touch](mailto:ali@devkind.com.au) if you want a custom analytics pipeline for your store.
+
+---
+
 ## What It Does
 
 Triggers automatically when you ask Claude to:
