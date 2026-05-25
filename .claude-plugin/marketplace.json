@@ -1,14 +1,36 @@
 {
   "name": "shopifyql-marketplace",
-  "description": "ShopifyQL skill for Claude Code",
+  "description": "The most complete ShopifyQL and Segment Query Language skill for Claude Code. Write, execute, debug, and explain ShopifyQL analytics queries against your live Shopify store.",
   "owner": {
     "name": "Kazim Ali",
     "email": "ali@devkind.com.au"
   },
+  "keywords": [
+    "shopify",
+    "shopifyql",
+    "analytics",
+    "segments",
+    "ecommerce",
+    "queries",
+    "execution",
+    "python",
+    "shopify-analytics",
+    "customer-segments",
+    "shopify-reports",
+    "segment-query-language",
+    "shopify-graphql",
+    "shopify-plus",
+    "sales-analytics",
+    "shopify-admin-api",
+    "ai-analytics",
+    "claude-code-plugin",
+    "shopify-sdk",
+    "ecommerce-reporting"
+  ],
   "plugins": [
     {
       "name": "shopifyql",
-      "description": "Write, execute, and explain ShopifyQL analytics queries and Shopify Segment Query Language customer filters",
+      "description": "The most complete ShopifyQL and Segment Query Language skill for Claude Code. Write, execute, debug, and explain ShopifyQL analytics queries against your live Shopify store.",
       "version": "1.5.0",
       "source": "./",
       "author": {
